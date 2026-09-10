@@ -21,4 +21,3 @@ class AuthenticationError(Enum):
     TOKEN_INVALID = auto()
     AUTH_TEMPORARILY_BLOCKED = auto()
     INVALID_CREDENTIALS = auto()
-    MISSING_TOTP_SESSION = auto()

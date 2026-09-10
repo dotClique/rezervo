@@ -68,12 +68,6 @@ def initialize_cron():
             schedule="* * * * *",
             comment="process scheduled push notifications",
         )
-        upsert_cli_cron_job(
-            crontab,
-            command="purge_playwright",
-            schedule="*/5 * * * *",
-            comment="purge playwright processes",
-        )
 
 
 @cron_cli.command(name="refresh")

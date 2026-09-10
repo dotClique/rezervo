@@ -93,7 +93,6 @@ def upsert_chain_user_creds(
     user_id: UUID,
     chain_identifier: ChainIdentifier,
     creds: ChainUserCredentials,
-    mark_as_verified: bool = True,
 ):
     db_chain_user = get_db_chain_user(db, chain_identifier, user_id)
     if db_chain_user is None:
@@ -102,20 +101,17 @@ def upsert_chain_user_creds(
             chain=chain_identifier,
             username=creds.username,
             password=creds.password,
+            auth_verified_at=datetime.now(),
         )
-        if mark_as_verified:
-            db_chain_user.auth_verified_at = datetime.now()
         db.add(db_chain_user)
     else:
-        if mark_as_verified:
-            db_chain_user.auth_verified_at = datetime.now()
+        db_chain_user.auth_verified_at = datetime.now()
         if (
             db_chain_user.username == creds.username
             and db_chain_user.password == creds.password
         ):
             return db_chain_user
-        if mark_as_verified:
-            db_chain_user.auth_data = None
+        db_chain_user.auth_data = None
         db_chain_user.username = creds.username
         db_chain_user.password = creds.password
     db.commit()
@@ -143,44 +139,6 @@ def get_db_chain_user(
         .filter_by(user_id=user_id, chain=chain_identifier)
         .one_or_none()
     )
-
-
-def get_chain_user_totp(
-    db: Session, chain_identifier: ChainIdentifier, user_id: UUID
-) -> str | None:
-    return (
-        db.query(models.ChainUser.totp)
-        .filter_by(user_id=user_id, chain=chain_identifier)
-        .scalar()
-    )
-
-
-def get_chain_user_auth_verified_at(
-    db: Session, chain_identifier: ChainIdentifier, user_id: UUID
-) -> datetime | None:
-    return (
-        db.query(models.ChainUser.auth_verified_at)
-        .filter_by(user_id=user_id, chain=chain_identifier)
-        .scalar()
-    )
-
-
-def update_chain_user_auth_verified_at(
-    db: Session, chain_identifier: ChainIdentifier, user_id: UUID
-):
-    db.query(models.ChainUser).filter_by(
-        user_id=user_id, chain=chain_identifier
-    ).update({models.ChainUser.auth_verified_at: datetime.now()})
-    db.commit()
-
-
-def delete_chain_user_totp(
-    db: Session, chain_identifier: ChainIdentifier, user_id: UUID
-):
-    db.query(models.ChainUser).filter_by(
-        user_id=user_id, chain=chain_identifier
-    ).update({models.ChainUser.totp: None})
-    db.commit()
 
 
 def get_chain_user(
